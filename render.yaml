@@ -1,0 +1,20 @@
+# render.yaml
+services:
+  - type: web
+    name: makdevs-api
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        value: https://makdevs-client.vercel.app  # Your actual frontend URL
+      - key: CORS_ORIGIN
+        value: https://makdevs-client.vercel.app
