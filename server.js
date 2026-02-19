@@ -102,14 +102,17 @@ app.use(xss());
 /* ========================
    ROUTES - THESE COME AFTER CORS MIDDLEWARE
 ======================== */
+// ✅ PUBLIC ROUTES FIRST
+app.use('/api/contact', contactRoutes);  // POST /contact is public
+app.use('/api/ideas', ideaRoutes);        // POST /ideas is public
+app.use('/api/newsletter/subscribe', newsletterRoutes); // Public
+
+// 🔒 THEN AUTHENTICATED ROUTES
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/testimonials', testimonialRoutes);
-app.use('/api/contact', contactRoutes);
-app.use('/api/ideas', ideaRoutes);
 app.use('/api/team', teamRoutes);
-app.use('/api/newsletter', newsletterRoutes);
 
 /* ========================
    HEALTH CHECK - IMPROVED
