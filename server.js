@@ -1,5 +1,4 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -7,10 +6,12 @@ const rateLimit = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const compression = require('compression');
-const path = require('path');
+const mongoose = require('mongoose');
 
-// Load environment variables
 dotenv.config();
+
+// Import DB
+const connectDB = require('./src/config/db');
 
 // Import routes
 const authRoutes = require('./src/routes/authRoutes');
@@ -27,11 +28,15 @@ const errorHandler = require('./src/middleware/errorHandler');
 
 const app = express();
 
-// Body parser - increase limit for images
+/* ========================
+   BODY PARSER
+======================== */
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// CORS configuration for production
+/* ========================
+   CORS CONFIG
+======================== */
 const allowedOrigins = [
   process.env.FRONTEND_URL,
   'https://makdevs-client.vercel.app',
@@ -39,39 +44,47 @@ const allowedOrigins = [
 ].filter(Boolean);
 
 app.use(cors({
-  origin: function(origin, callback) {
-    // Allow requests with no origin (like mobile apps, curl)
+  origin: function (origin, callback) {
     if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-      return callback(new Error(msg), false);
+
+    if (!allowedOrigins.includes(origin)) {
+      return callback(new Error('CORS not allowed'), false);
     }
+
     return callback(null, true);
   },
-  credentials: true,
-  optionsSuccessStatus: 200
+  credentials: true
 }));
 
-// Security middleware
+/* ========================
+   SECURITY MIDDLEWARE
+======================== */
 app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" } // Allow image loading
+  crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
+
 app.use(compression());
 
-// Rate limiting
+/* ========================
+   RATE LIMIT
+======================== */
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 * 60 * 1000,
   max: 100,
   message: 'Too many requests from this IP, please try again later.'
 });
+
 app.use('/api', limiter);
 
-// Data sanitization
+/* ========================
+   SANITIZATION
+======================== */
 app.use(mongoSanitize());
 app.use(xss());
 
-// Routes
+/* ========================
+   ROUTES
+======================== */
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/services', serviceRoutes);
@@ -81,7 +94,9 @@ app.use('/api/ideas', ideaRoutes);
 app.use('/api/team', teamRoutes);
 app.use('/api/newsletter', newsletterRoutes);
 
-// Health check
+/* ========================
+   HEALTH CHECK
+======================== */
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     status: 'success',
@@ -92,7 +107,9 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// 404 handler
+/* ========================
+   404 HANDLER
+======================== */
 app.use('*', (req, res) => {
   res.status(404).json({
     status: 'fail',
@@ -100,44 +117,28 @@ app.use('*', (req, res) => {
   });
 });
 
-// Error handler
+/* ========================
+   ERROR HANDLER
+======================== */
 app.use(errorHandler);
 
-// MongoDB connection
-const connectDB = async () => {
-  try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    
-    console.log('✅ MongoDB Atlas Connected Successfully');
-    console.log(`📊 Database: ${conn.connection.name}`);
-    console.log(`🌍 Host: ${conn.connection.host}`);
-    
-    return conn;
-  } catch (error) {
-    console.error('❌ MongoDB Atlas connection error:', error.message);
-    process.exit(1);
-  }
-};
-
-// Start server only if not in test environment
+/* ========================
+   START SERVER
+======================== */
 if (process.env.NODE_ENV !== 'test') {
   connectDB().then(() => {
     const PORT = process.env.PORT || 10000;
+
     const server = app.listen(PORT, '0.0.0.0', () => {
-      console.log(`✅ Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
-      console.log(`📍 Health check: http://localhost:${PORT}/api/health`);
+      console.log(`✅ Server running on port ${PORT}`);
+      console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
     });
 
-    // Handle unhandled rejections
     process.on('unhandledRejection', (err) => {
-      console.log('❌ UNHANDLED REJECTION:', err);
+      console.error('❌ UNHANDLED REJECTION:', err);
       server.close(() => process.exit(1));
     });
 
-    // Handle SIGTERM
     process.on('SIGTERM', () => {
       console.log('👋 SIGTERM received. Shutting down gracefully');
       server.close(() => {
