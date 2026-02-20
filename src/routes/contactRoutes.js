@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 const contactController = require('../controllers/contactController');
-const authMiddleware = require('../middleware/auth');
 const validate = require('../middleware/validation');
 const rateLimit = require('express-rate-limit');
 
@@ -71,9 +70,7 @@ router.post(
   contactController.submitContact
 );
 
-// 🔒 PROTECTED ROUTES - Admin only
-router.use(authMiddleware.protect, authMiddleware.restrictTo('admin'));
-
+// All routes are now public (authentication removed)
 router.get('/', contactController.getAllContacts);
 router.get('/:id', contactController.getContact);
 router.patch('/:id', contactController.updateContact);

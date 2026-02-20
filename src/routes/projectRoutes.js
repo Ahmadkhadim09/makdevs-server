@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 const projectController = require('../controllers/projectController');
-const authMiddleware = require('../middleware/auth');
 const upload = require('../middleware/upload');
 const validate = require('../middleware/validation');
 
@@ -15,18 +14,13 @@ const projectValidation = [
 ];
 // Add these routes for image handling
 router.get('/:projectId/images/:imageIndex', projectController.getImage);
-router.delete('/:projectId/images/:imageIndex', 
-  authMiddleware.protect, 
-  authMiddleware.restrictTo('admin'), 
-  projectController.deleteImage
-);
+router.delete('/:projectId/images/:imageIndex', projectController.deleteImage);
+
 // Public routes
 router.get('/', projectController.getAllProjects);
 router.get('/:slug', projectController.getProject);
 
-// Protected routes (Admin only)
-router.use(authMiddleware.protect, authMiddleware.restrictTo('admin'));
-
+// All routes are now public (authentication removed)
 router.post('/', projectValidation, validate, projectController.createProject);
 router.patch('/:id', projectController.updateProject);
 router.delete('/:id', projectController.deleteProject);

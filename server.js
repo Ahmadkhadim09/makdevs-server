@@ -35,21 +35,16 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 /* ========================
-   🔥 FIX 3: CORS MIDDLEWARE - PUT IT HERE 🔥
+   CORS MIDDLEWARE - Allow all origins for deployment
 ======================== */
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   
-  // Your frontend URLs
-  const allowedOrigins = [
-    'https://frontend-m-7megbybna-muhammad-ahmads-projects-d5bda9cb.vercel.app',
-    'https://frontend-m-ak.vercel.app',
-    'http://localhost:3000'
-  ];
-  
-  // Allow requests from allowed origins
-  if (allowedOrigins.includes(origin)) {
+  // Allow all origins for deployment
+  if (origin) {
     res.setHeader('Access-Control-Allow-Origin', origin);
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', '*');
   }
   
   // Set other CORS headers
@@ -60,19 +55,11 @@ app.use((req, res, next) => {
   
   // Handle preflight OPTIONS requests
   if (req.method === 'OPTIONS') {
-    console.log('🔄 Handling OPTIONS preflight request');
     return res.sendStatus(200);
   }
   
   next();
 });
-
-/* ========================
-   EXISTING CORS (you can keep or remove)
-   If you keep it, make sure it doesn't conflict
-======================== */
-// You can COMMENT OUT your existing cors() or leave it
-// app.use(cors()); // ← If this is here, comment it out
 
 /* ========================
    SECURITY MIDDLEWARE
@@ -132,10 +119,7 @@ app.get('/api/health', (req, res) => {
         readyState: dbState
       },
       cors: 'enabled',
-      allowedOrigins: [
-        'https://frontend-m-7megbybna-muhammad-ahmads-projects-d5bda9cb.vercel.app',
-        'https://frontend-m-ak.vercel.app'
-      ]
+      allowedOrigins: 'all'
     });
   } catch (error) {
     console.error('Health check error:', error);

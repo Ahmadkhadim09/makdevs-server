@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 const serviceController = require('../controllers/serviceController');
-const authMiddleware = require('../middleware/auth');
 const validate = require('../middleware/validation');
 
 // Validation rules
@@ -16,9 +15,7 @@ const serviceValidation = [
 router.get('/', serviceController.getAllServices);
 router.get('/:id', serviceController.getService);
 
-// Protected routes (Admin only)
-router.use(authMiddleware.protect, authMiddleware.restrictTo('admin'));
-
+// All routes are now public (authentication removed)
 router.post('/', serviceValidation, validate, serviceController.createService);
 router.patch('/:id', serviceController.updateService);
 router.delete('/:id', serviceController.deleteService);

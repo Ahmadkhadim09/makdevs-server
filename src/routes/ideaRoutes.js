@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 const ideaController = require('../controllers/ideaController');
-const authMiddleware = require('../middleware/auth');
 const validate = require('../middleware/validation');
 
 // Validation rules
@@ -14,11 +13,8 @@ const ideaValidation = [
   body('industry').notEmpty().withMessage('Industry is required')
 ];
 
-// Public routes
+// All routes are now public (authentication removed)
 router.post('/', ideaValidation, validate, ideaController.submitIdea);
-
-// Protected routes (Admin only)
-router.use(authMiddleware.protect, authMiddleware.restrictTo('admin'));
 
 router.route('/')
   .get(ideaController.getAllIdeas);

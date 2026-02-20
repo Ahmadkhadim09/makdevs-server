@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 const authController = require('../controllers/authController');
-const authMiddleware = require('../middleware/auth');
 const validate = require('../middleware/validation');
 
 // Validation rules
@@ -24,8 +23,7 @@ router.post('/forgotpassword', authController.forgotPassword);
 router.patch('/resetpassword/:token', authController.resetPassword);
 router.get('/verifyemail/:token', authController.verifyEmail);
 
-// Protected routes
-router.use(authMiddleware.protect);
+// All routes are now public (authentication removed)
 router.get('/logout', authController.logout);
 router.get('/me', authController.getMe);
 router.patch('/updatedetails', authController.updateDetails);
