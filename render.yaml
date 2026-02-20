@@ -15,6 +15,6 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: FRONTEND_URL
-        value: https://makdevs-client.vercel.app  # Your actual frontend URL
+        value: https://frontend-m-ak.vercel.app  # Your actual frontend URL
       - key: CORS_ORIGIN
-        value: https://makdevs-client.vercel.app
+        value: https://frontend-m-ak.vercel.app
