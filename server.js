@@ -92,7 +92,7 @@ app.use(xss());
 // ✅ PUBLIC ROUTES FIRST
 app.use('/api/contact', contactRoutes);  // POST /contact is public
 app.use('/api/ideas', ideaRoutes);        // POST /ideas is public
-app.use('/api/newsletter/subscribe', newsletterRoutes); // Public
+app.use('/api/newsletter', newsletterRoutes); // Newsletter routes
 
 // 🔒 THEN AUTHENTICATED ROUTES
 app.use('/api/auth', authRoutes);
