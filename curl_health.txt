@@ -1,0 +1,1 @@
+﻿{"status":"success","message":"MAKDEVS API is running","timestamp":"2026-07-17T12:18:03.305Z","environment":"production","database":{"status":"connected","readyState":1},"email":{"status":"failed: Connection timeout"},"cors":"enabled","allowedOrigins":"all"}

@@ -1,12 +1,18 @@
+const { Resend } = require('resend');
 const nodemailer = require('nodemailer');
 
 const DEFAULT_EMAIL = 'service@makdev.online';
 
 class EmailService {
   constructor() {
+    // Resend client (HTTP API - works from Render, no SMTP port blocking)
+    this.resend = new Resend(process.env.RESEND_API_KEY);
+
+    // Keep a nodemailer transporter for /api/health verify() compatibility
+    // This will show the SMTP status but actual sending goes via Resend
     this.transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
+      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.EMAIL_PORT || '587', 10),
       secure: process.env.EMAIL_PORT === '465',
       auth: {
         user: process.env.EMAIL_USER,
@@ -23,9 +29,30 @@ class EmailService {
     return process.env.EMAIL_FROM || DEFAULT_EMAIL;
   }
 
+  get fromName() {
+    return 'MAKDEVS';
+  }
+
   async sendEmail(options) {
+    // If RESEND_API_KEY is set, use Resend (works on Render)
+    if (process.env.RESEND_API_KEY) {
+      const { data, error } = await this.resend.emails.send({
+        from: `${this.fromName} <${this.fromEmail}>`,
+        to: options.to,
+        subject: options.subject,
+        html: options.html
+      });
+
+      if (error) {
+        throw new Error(`Resend error: ${error.message}`);
+      }
+
+      return data;
+    }
+
+    // Fallback to nodemailer SMTP (may not work on Render free tier)
     const mailOptions = {
-      from: `MAKDEVS <${this.fromEmail}>`,
+      from: `${this.fromName} <${this.fromEmail}>`,
       to: options.to,
       subject: options.subject,
       html: options.html
@@ -33,6 +60,8 @@ class EmailService {
 
     return await this.transporter.sendMail(mailOptions);
   }
+
+  // ─── Contact ───────────────────────────────────────────────────────────────
 
   async sendContactNotification(contact) {
     const html = `
@@ -46,33 +75,23 @@ class EmailService {
       <p><strong>Message:</strong></p>
       <p>${contact.message}</p>
     `;
-
-    return this.sendEmail({
-      to: this.adminEmail,
-      subject: 'New Contact Form Submission - MAKDEVS',
-      html
-    });
+    return this.sendEmail({ to: this.adminEmail, subject: 'New Contact Form Submission - MAKDEVS', html });
   }
 
   async sendContactAutoReply(contact) {
     const html = `
       <h2>Thank you for contacting MAKDEVS!</h2>
       <p>Dear ${contact.name},</p>
-      <p>Thank you for reaching out to us. We have received your inquiry and will get back to you within 24 hours.</p>
-      <p>Here's a copy of your message:</p>
+      <p>We have received your inquiry and will get back to you within 24 hours.</p>
       <p><strong>Project Type:</strong> ${contact.projectType}</p>
       <p><strong>Message:</strong> ${contact.message}</p>
       <br>
-      <p>Best regards,</p>
-      <p>The MAKDEVS Team</p>
+      <p>Best regards,<br>The MAKDEVS Team</p>
     `;
-
-    return this.sendEmail({
-      to: contact.email,
-      subject: 'Thank you for contacting MAKDEVS',
-      html
-    });
+    return this.sendEmail({ to: contact.email, subject: 'Thank you for contacting MAKDEVS', html });
   }
+
+  // ─── Ideas ─────────────────────────────────────────────────────────────────
 
   async sendIdeaNotification(idea) {
     const html = `
@@ -84,33 +103,21 @@ class EmailService {
       <p><strong>Description:</strong></p>
       <p>${idea.ideaDescription}</p>
     `;
-
-    return this.sendEmail({
-      to: this.adminEmail,
-      subject: 'New Idea Submission - MAKDEVS',
-      html
-    });
+    return this.sendEmail({ to: this.adminEmail, subject: 'New Idea Submission - MAKDEVS', html });
   }
 
   async sendIdeaConfirmation(idea) {
     const html = `
       <h2>Thank you for sharing your idea with MAKDEVS!</h2>
       <p>Dear ${idea.name},</p>
-      <p>Thank you for submitting your innovative idea. We have received it and our team will review it shortly.</p>
-      <p>Here's a copy of your submission:</p>
+      <p>We have received your idea and will review it shortly.</p>
       <p><strong>Idea Title:</strong> ${idea.ideaTitle}</p>
       <p><strong>Industry:</strong> ${idea.industry}</p>
       <p><strong>Description:</strong> ${idea.ideaDescription}</p>
       <br>
-      <p>Best regards,</p>
-      <p>The MAKDEVS Team</p>
+      <p>Best regards,<br>The MAKDEVS Team</p>
     `;
-
-    return this.sendEmail({
-      to: idea.email,
-      subject: 'Your idea has been received - MAKDEVS',
-      html
-    });
+    return this.sendEmail({ to: idea.email, subject: 'Your idea has been received - MAKDEVS', html });
   }
 
   async sendIdeaReviewNotification(idea) {
@@ -119,23 +126,18 @@ class EmailService {
       rejected: 'Thank you for your idea. After careful review, we have decided not to pursue it at this time.',
       implemented: 'Great news! Your idea has been implemented. Thank you for your contribution!'
     };
-
     const html = `
       <h2>Your Idea Status Update - MAKDEVS</h2>
       <p>Dear ${idea.name},</p>
       <p>${statusMessages[idea.status] || 'Your idea status has been updated.'}</p>
       ${idea.reviewNotes ? `<p><strong>Review Notes:</strong> ${idea.reviewNotes}</p>` : ''}
       <br>
-      <p>Best regards,</p>
-      <p>The MAKDEVS Team</p>
+      <p>Best regards,<br>The MAKDEVS Team</p>
     `;
-
-    return this.sendEmail({
-      to: idea.email,
-      subject: `Idea ${idea.status} - MAKDEVS`,
-      html
-    });
+    return this.sendEmail({ to: idea.email, subject: `Idea ${idea.status} - MAKDEVS`, html });
   }
+
+  // ─── Auth ──────────────────────────────────────────────────────────────────
 
   async sendWelcomeEmail(user) {
     const html = `
@@ -143,32 +145,36 @@ class EmailService {
       <p>Dear ${user.name},</p>
       <p>Thank you for registering at MAKDEVS. We are excited to have you on board!</p>
       <br>
-      <p>Best regards,</p>
-      <p>The MAKDEVS Team</p>
+      <p>Best regards,<br>The MAKDEVS Team</p>
     `;
-
-    return this.sendEmail({
-      to: user.email,
-      subject: 'Welcome to MAKDEVS',
-      html
-    });
+    return this.sendEmail({ to: user.email, subject: 'Welcome to MAKDEVS', html });
   }
+
+  async sendPasswordResetEmail(user, resetToken) {
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+    const html = `
+      <h2>Password Reset Request</h2>
+      <p>Dear ${user.name},</p>
+      <p>Click the button below to reset your password:</p>
+      <a href="${resetUrl}" style="display:inline-block;padding:12px 24px;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none;">Reset Password</a>
+      <p>This link expires in 1 hour. If you did not request this, please ignore this email.</p>
+      <br>
+      <p>Best regards,<br>The MAKDEVS Team</p>
+    `;
+    return this.sendEmail({ to: user.email, subject: 'Password Reset - MAKDEVS', html });
+  }
+
+  // ─── Newsletter ────────────────────────────────────────────────────────────
 
   async sendNewsletterWelcome(subscriber) {
     const html = `
       <h2>Welcome to the MAKDEVS Newsletter!</h2>
       <p>Dear ${subscriber.name || 'Subscriber'},</p>
-      <p>Thank you for subscribing to our newsletter. You will now receive weekly tech insights, project updates, and company news.</p>
+      <p>Thank you for subscribing. You will now receive weekly tech insights, project updates, and company news.</p>
       <br>
-      <p>Best regards,</p>
-      <p>The MAKDEVS Team</p>
+      <p>Best regards,<br>The MAKDEVS Team</p>
     `;
-
-    return this.sendEmail({
-      to: subscriber.email,
-      subject: 'Welcome to the MAKDEVS Newsletter',
-      html
-    });
+    return this.sendEmail({ to: subscriber.email, subject: 'Welcome to the MAKDEVS Newsletter', html });
   }
 }
 
