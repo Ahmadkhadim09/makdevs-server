@@ -12,11 +12,13 @@ exports.submitIdea = catchAsync(async (req, res) => {
     ip: req.ip
   });
 
-  // Send notification to admin
-  await EmailService.sendIdeaNotification(idea);
-
-  // Send confirmation to user
-  await EmailService.sendIdeaConfirmation(idea);
+  try {
+    await EmailService.sendIdeaNotification(idea);
+    await EmailService.sendIdeaConfirmation(idea);
+    console.log('✅ Idea emails sent to:', process.env.ADMIN_EMAIL);
+  } catch (emailError) {
+    console.error('❌ Idea email error:', emailError.message);
+  }
 
   res.status(201).json({
     status: 'success',

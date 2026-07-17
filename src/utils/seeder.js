@@ -89,7 +89,7 @@ const seedDatabase = async () => {
     // Create admin user
     const admin = await User.create({
       name: 'Admin User',
-      email: 'admin@makdevs.com',
+      email: 'service@makdev.online',
       password: 'admin123456',
       role: 'admin',
       isVerified: true

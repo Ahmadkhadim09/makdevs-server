@@ -1,5 +1,7 @@
 const nodemailer = require('nodemailer');
 
+const DEFAULT_EMAIL = 'service@makdev.online';
+
 class EmailService {
   constructor() {
     this.transporter = nodemailer.createTransport({
@@ -13,9 +15,17 @@ class EmailService {
     });
   }
 
+  get adminEmail() {
+    return process.env.ADMIN_EMAIL || DEFAULT_EMAIL;
+  }
+
+  get fromEmail() {
+    return process.env.EMAIL_FROM || DEFAULT_EMAIL;
+  }
+
   async sendEmail(options) {
     const mailOptions = {
-      from: `MAKDEVS <${process.env.EMAIL_FROM}>`,
+      from: `MAKDEVS <${this.fromEmail}>`,
       to: options.to,
       subject: options.subject,
       html: options.html
@@ -38,7 +48,7 @@ class EmailService {
     `;
 
     return this.sendEmail({
-      to: process.env.ADMIN_EMAIL,
+      to: this.adminEmail,
       subject: 'New Contact Form Submission - MAKDEVS',
       html
     });
@@ -76,7 +86,7 @@ class EmailService {
     `;
 
     return this.sendEmail({
-      to: process.env.ADMIN_EMAIL,
+      to: this.adminEmail,
       subject: 'New Idea Submission - MAKDEVS',
       html
     });

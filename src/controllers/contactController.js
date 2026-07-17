@@ -2,6 +2,7 @@ const Contact = require('../models/Contact');
 const Newsletter = require('../models/Newsletter');
 const AppError = require('../utils/AppError');
 const catchAsync = require('../utils/catchAsync');
+const EmailService = require('../utils/emailService');
 
 // @desc    Submit contact form
 // @route   POST /api/contact
@@ -30,6 +31,15 @@ exports.submitContact = catchAsync(async (req, res) => {
   });
 
   console.log('✅ Contact saved with ID:', contact._id);
+
+  // Send email notifications
+  try {
+    await EmailService.sendContactNotification(contact);
+    await EmailService.sendContactAutoReply(contact);
+    console.log('✅ Contact emails sent to:', process.env.ADMIN_EMAIL);
+  } catch (emailError) {
+    console.error('❌ Contact email error:', emailError.message);
+  }
 
   // If user opted for newsletter, add to newsletter list
   if (req.body.newsletter) {
