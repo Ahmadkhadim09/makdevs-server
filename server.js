@@ -26,6 +26,9 @@ const newsletterRoutes = require('./src/routes/newsletterRoutes');
 // Import error handler
 const errorHandler = require('./src/middleware/errorHandler');
 
+// Import EmailService for health check diagnostics
+const emailService = require('./src/utils/emailService');
+
 const app = express();
 
 /* ========================
@@ -39,25 +42,25 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 ======================== */
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  
+
   // Allow all origins for deployment
   if (origin) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   } else {
     res.setHeader('Access-Control-Allow-Origin', '*');
   }
-  
+
   // Set other CORS headers
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Max-Age', '86400'); // 24 hours
-  
+
   // Handle preflight OPTIONS requests
   if (req.method === 'OPTIONS') {
     return res.sendStatus(200);
   }
-  
+
   next();
 });
 
@@ -104,11 +107,20 @@ app.use('/api/team', teamRoutes);
 /* ========================
    HEALTH CHECK - IMPROVED
 ======================== */
-app.get('/api/health', (req, res) => {
+app.get('/api/health', async (req, res) => {
   try {
     const dbState = mongoose.connection.readyState;
     const dbStatus = ['disconnected', 'connected', 'connecting', 'disconnecting'];
-    
+
+    // Verify SMTP configuration status
+    let emailStatus = 'pending';
+    try {
+      await emailService.transporter.verify();
+      emailStatus = 'connected';
+    } catch (err) {
+      emailStatus = `failed: ${err.message}`;
+    }
+
     res.status(200).json({
       status: 'success',
       message: 'MAKDEVS API is running',
@@ -117,6 +129,9 @@ app.get('/api/health', (req, res) => {
       database: {
         status: dbStatus[dbState] || 'unknown',
         readyState: dbState
+      },
+      email: {
+        status: emailStatus
       },
       cors: 'enabled',
       allowedOrigins: 'all'
@@ -134,7 +149,7 @@ app.get('/api/health', (req, res) => {
    TEST ENDPOINT (for debugging)
 ======================== */
 app.get('/api/test', (req, res) => {
-  res.json({ 
+  res.json({
     message: 'Test endpoint working!',
     headers: req.headers,
     time: new Date().toISOString()
