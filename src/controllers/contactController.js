@@ -32,22 +32,19 @@ exports.submitContact = catchAsync(async (req, res) => {
 
   console.log('✅ Contact saved with ID:', contact._id);
 
-  // Send email notifications
-  try {
-    await EmailService.sendContactNotification(contact);
-    await EmailService.sendContactAutoReply(contact);
-    console.log('✅ Contact emails sent to:', process.env.ADMIN_EMAIL);
-  } catch (emailError) {
-    console.error('❌ Contact email error:', emailError.message);
-  }
+  // Send email notifications in the background (non-blocking)
+  EmailService.sendContactNotification(contact)
+    .then(() => EmailService.sendContactAutoReply(contact))
+    .then(() => console.log('✅ Contact emails sent'))
+    .catch((emailError) => console.error('❌ Contact email error:', emailError.message));
 
   // If user opted for newsletter, add to newsletter list
   if (req.body.newsletter) {
     try {
       await Newsletter.findOneAndUpdate(
         { email: req.body.email },
-        { 
-          email: req.body.email, 
+        {
+          email: req.body.email,
           name: req.body.name,
           subscribedAt: new Date(),
           status: 'active'
@@ -87,7 +84,7 @@ exports.getAllContacts = catchAsync(async (req, res) => {
 
   // Build query
   const query = {};
-  
+
   // Filter by status
   if (req.query.status) {
     query.status = req.query.status;
@@ -197,7 +194,7 @@ exports.updateContact = catchAsync(async (req, res, next) => {
 // @access  Private/Admin
 exports.updateContactStatus = catchAsync(async (req, res, next) => {
   const { status } = req.body;
-  
+
   if (!['new', 'read', 'replied', 'archived'].includes(status)) {
     return next(new AppError('Invalid status', 400));
   }

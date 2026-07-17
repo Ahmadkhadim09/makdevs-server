@@ -40,8 +40,10 @@ exports.subscribe = catchAsync(async (req, res) => {
     ip: req.ip
   });
 
-  // Send welcome email
-  await EmailService.sendNewsletterWelcome(subscriber);
+  // Send welcome email in the background (non-blocking)
+  EmailService.sendNewsletterWelcome(subscriber)
+    .then(() => console.log('✅ Newsletter welcome email sent'))
+    .catch((emailError) => console.error('❌ Newsletter welcome email error:', emailError.message));
 
   res.status(201).json({
     status: 'success',
@@ -84,7 +86,7 @@ exports.getAllSubscribers = catchAsync(async (req, res) => {
   const skip = (page - 1) * limit;
 
   const query = {};
-  
+
   // Filter by status
   if (req.query.status) {
     query.status = req.query.status;

@@ -136,6 +136,40 @@ class EmailService {
       html
     });
   }
+
+  async sendWelcomeEmail(user) {
+    const html = `
+      <h2>Welcome to MAKDEVS!</h2>
+      <p>Dear ${user.name},</p>
+      <p>Thank you for registering at MAKDEVS. We are excited to have you on board!</p>
+      <br>
+      <p>Best regards,</p>
+      <p>The MAKDEVS Team</p>
+    `;
+
+    return this.sendEmail({
+      to: user.email,
+      subject: 'Welcome to MAKDEVS',
+      html
+    });
+  }
+
+  async sendNewsletterWelcome(subscriber) {
+    const html = `
+      <h2>Welcome to the MAKDEVS Newsletter!</h2>
+      <p>Dear ${subscriber.name || 'Subscriber'},</p>
+      <p>Thank you for subscribing to our newsletter. You will now receive weekly tech insights, project updates, and company news.</p>
+      <br>
+      <p>Best regards,</p>
+      <p>The MAKDEVS Team</p>
+    `;
+
+    return this.sendEmail({
+      to: subscriber.email,
+      subject: 'Welcome to the MAKDEVS Newsletter',
+      html
+    });
+  }
 }
 
 module.exports = new EmailService();

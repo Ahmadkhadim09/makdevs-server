@@ -43,8 +43,10 @@ exports.register = catchAsync(async (req, res, next) => {
     password
   });
 
-  // Send welcome email
-  await EmailService.sendWelcomeEmail(user);
+  // Send welcome email in the background (non-blocking)
+  EmailService.sendWelcomeEmail(user)
+    .then(() => console.log('✅ Welcome email sent'))
+    .catch((emailError) => console.error('❌ Welcome email error:', emailError.message));
 
   createSendToken(user, 201, res);
 });

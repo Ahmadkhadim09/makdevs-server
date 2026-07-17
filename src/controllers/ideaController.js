@@ -12,13 +12,11 @@ exports.submitIdea = catchAsync(async (req, res) => {
     ip: req.ip
   });
 
-  try {
-    await EmailService.sendIdeaNotification(idea);
-    await EmailService.sendIdeaConfirmation(idea);
-    console.log('✅ Idea emails sent to:', process.env.ADMIN_EMAIL);
-  } catch (emailError) {
-    console.error('❌ Idea email error:', emailError.message);
-  }
+  // Send email notifications in the background (non-blocking)
+  EmailService.sendIdeaNotification(idea)
+    .then(() => EmailService.sendIdeaConfirmation(idea))
+    .then(() => console.log('✅ Idea emails sent'))
+    .catch((emailError) => console.error('❌ Idea email error:', emailError.message));
 
   res.status(201).json({
     status: 'success',
@@ -36,7 +34,7 @@ exports.getAllIdeas = catchAsync(async (req, res) => {
   const skip = (page - 1) * limit;
 
   const query = {};
-  
+
   // Filter by status
   if (req.query.status) {
     query.status = req.query.status;
