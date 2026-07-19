@@ -54,14 +54,10 @@ const contactValidation = [
     .notEmpty().withMessage('Message is required')
     .isLength({ min: 10, max: 2000 }).withMessage('Message must be between 10 and 2000 characters')
     .trim()
-    .escape(),
-  
-  body('newsletter')
-    .optional()
-    .isBoolean().withMessage('Invalid newsletter value')
+    .escape()
 ];
 
-// ✅ PUBLIC ROUTE - No authentication required
+// Public route - no authentication required
 router.post(
   '/', 
   contactLimiter, // Apply rate limiting

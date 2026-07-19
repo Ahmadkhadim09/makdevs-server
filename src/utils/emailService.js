@@ -6,7 +6,7 @@ const DEFAULT_EMAIL = 'service@makdev.online';
 class EmailService {
   constructor() {
     // Resend client (HTTP API - works from Render, no SMTP port blocking)
-    this.resend = new Resend(process.env.RESEND_API_KEY);
+    this.resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
     // Keep a nodemailer transporter for /api/health verify() compatibility
     // This will show the SMTP status but actual sending goes via Resend
@@ -35,7 +35,7 @@ class EmailService {
 
   async sendEmail(options) {
     // If RESEND_API_KEY is set, use Resend (works on Render)
-    if (process.env.RESEND_API_KEY) {
+    if (this.resend) {
       const { data, error } = await this.resend.emails.send({
         from: `${this.fromName} <${this.fromEmail}>`,
         to: options.to,
@@ -135,46 +135,6 @@ class EmailService {
       <p>Best regards,<br>The MAKDEVS Team</p>
     `;
     return this.sendEmail({ to: idea.email, subject: `Idea ${idea.status} - MAKDEVS`, html });
-  }
-
-  // ─── Auth ──────────────────────────────────────────────────────────────────
-
-  async sendWelcomeEmail(user) {
-    const html = `
-      <h2>Welcome to MAKDEVS!</h2>
-      <p>Dear ${user.name},</p>
-      <p>Thank you for registering at MAKDEVS. We are excited to have you on board!</p>
-      <br>
-      <p>Best regards,<br>The MAKDEVS Team</p>
-    `;
-    return this.sendEmail({ to: user.email, subject: 'Welcome to MAKDEVS', html });
-  }
-
-  async sendPasswordResetEmail(user, resetToken) {
-    const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
-    const html = `
-      <h2>Password Reset Request</h2>
-      <p>Dear ${user.name},</p>
-      <p>Click the button below to reset your password:</p>
-      <a href="${resetUrl}" style="display:inline-block;padding:12px 24px;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none;">Reset Password</a>
-      <p>This link expires in 1 hour. If you did not request this, please ignore this email.</p>
-      <br>
-      <p>Best regards,<br>The MAKDEVS Team</p>
-    `;
-    return this.sendEmail({ to: user.email, subject: 'Password Reset - MAKDEVS', html });
-  }
-
-  // ─── Newsletter ────────────────────────────────────────────────────────────
-
-  async sendNewsletterWelcome(subscriber) {
-    const html = `
-      <h2>Welcome to the MAKDEVS Newsletter!</h2>
-      <p>Dear ${subscriber.name || 'Subscriber'},</p>
-      <p>Thank you for subscribing. You will now receive weekly tech insights, project updates, and company news.</p>
-      <br>
-      <p>Best regards,<br>The MAKDEVS Team</p>
-    `;
-    return this.sendEmail({ to: subscriber.email, subject: 'Welcome to the MAKDEVS Newsletter', html });
   }
 }
 

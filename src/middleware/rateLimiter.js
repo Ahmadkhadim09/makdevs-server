@@ -27,18 +27,8 @@ const contactLimiter = rateLimit({
   legacyHeaders: false
 });
 
-// Newsletter limiter
-const newsletterLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 2,
-  message: 'Too many subscription attempts, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false
-});
-
 module.exports = {
   apiLimiter,
   authLimiter,
-  contactLimiter,
-  newsletterLimiter
+  contactLimiter
 };

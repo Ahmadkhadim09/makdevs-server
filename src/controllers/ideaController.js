@@ -15,8 +15,8 @@ exports.submitIdea = catchAsync(async (req, res) => {
   // Send email notifications in the background (non-blocking)
   EmailService.sendIdeaNotification(idea)
     .then(() => EmailService.sendIdeaConfirmation(idea))
-    .then(() => console.log('✅ Idea emails sent'))
-    .catch((emailError) => console.error('❌ Idea email error:', emailError.message));
+    .then(() => console.log('Idea emails sent'))
+    .catch((emailError) => console.error('Idea email error:', emailError.message));
 
   res.status(201).json({
     status: 'success',

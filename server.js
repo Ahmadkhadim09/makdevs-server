@@ -14,14 +14,12 @@ dotenv.config();
 const connectDB = require('./src/config/database');
 
 // Import routes
-const authRoutes = require('./src/routes/authRoutes');
 const projectRoutes = require('./src/routes/projectRoutes');
 const serviceRoutes = require('./src/routes/serviceRoutes');
 const testimonialRoutes = require('./src/routes/testimonialRoutes');
 const contactRoutes = require('./src/routes/contactRoutes');
 const ideaRoutes = require('./src/routes/ideaRoutes');
 const teamRoutes = require('./src/routes/teamRoutes');
-const newsletterRoutes = require('./src/routes/newsletterRoutes');
 
 // Import error handler
 const errorHandler = require('./src/middleware/errorHandler');
@@ -92,13 +90,11 @@ app.use(xss());
 /* ========================
    ROUTES - THESE COME AFTER CORS MIDDLEWARE
 ======================== */
-// ✅ PUBLIC ROUTES FIRST
+// Public routes first
 app.use('/api/contact', contactRoutes);  // POST /contact is public
 app.use('/api/ideas', ideaRoutes);        // POST /ideas is public
-app.use('/api/newsletter', newsletterRoutes); // Newsletter routes
 
-// 🔒 THEN AUTHENTICATED ROUTES
-app.use('/api/auth', authRoutes);
+// 🔒 THEN AUTHENTICATED ROUTES (no longer require auth)
 app.use('/api/projects', projectRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/testimonials', testimonialRoutes);
@@ -179,28 +175,26 @@ if (process.env.NODE_ENV !== 'test') {
     const PORT = process.env.PORT || 10000;
 
     const server = app.listen(PORT, '0.0.0.0', () => {
-      console.log('\n✅'.repeat(20));
-      console.log(`✅ Server running on port ${PORT}`);
-      console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`📍 Local: http://localhost:${PORT}`);
-      console.log(`📍 API: http://localhost:${PORT}/api/health`);
-      console.log('✅'.repeat(20) + '\n');
+      console.log('Server running on port ' + PORT);
+      console.log('Environment: ' + (process.env.NODE_ENV || 'development'));
+      console.log('Local: http://localhost:' + PORT);
+      console.log('API: http://localhost:' + PORT + '/api/health');
     });
 
     process.on('unhandledRejection', (err) => {
-      console.error('❌ UNHANDLED REJECTION:', err);
+      console.error('Unhandled rejection:', err);
       server.close(() => process.exit(1));
     });
 
     process.on('SIGTERM', () => {
-      console.log('👋 SIGTERM received');
+      console.log('SIGTERM received');
       server.close(() => {
         mongoose.connection.close();
         process.exit(0);
       });
     });
   }).catch(err => {
-    console.error('❌ Failed to start server:', err);
+    console.error('Failed to start server:', err);
     process.exit(1);
   });
 }

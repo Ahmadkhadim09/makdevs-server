@@ -14,13 +14,13 @@ const Team = require('../models/Team');
 // Sample data
 const sampleServices = [
   {
-    icon: '💻',
+    icon: 'code',
     title: 'Web Development',
     description: 'Custom web applications built with modern technologies',
     fullDescription: 'We build scalable, high-performance web applications using cutting-edge technologies...',
     features: [
-      { title: 'Responsive Design', description: 'Mobile-first approach', icon: '📱' },
-      { title: 'Performance', description: 'Optimized for speed', icon: '⚡' }
+      { title: 'Responsive Design', description: 'Mobile-first approach', icon: 'mobile' },
+      { title: 'Performance', description: 'Optimized for speed', icon: 'speed' }
     ],
     technologies: ['React', 'Node.js', 'MongoDB', 'Python']
   },
@@ -30,8 +30,8 @@ const sampleServices = [
     description: 'Native and cross-platform mobile applications',
     fullDescription: 'We create engaging mobile experiences for iOS and Android...',
     features: [
-      { title: 'Native Performance', description: 'Smooth, native-like experience', icon: '🚀' },
-      { title: 'Offline Support', description: 'Work without internet', icon: '📴' }
+      { title: 'Native Performance', description: 'Smooth, native-like experience', icon: 'rocket' },
+      { title: 'Offline Support', description: 'Work without internet', icon: 'offline' }
     ],
     technologies: ['React Native', 'Flutter', 'Swift', 'Kotlin']
   }
@@ -73,7 +73,7 @@ const sampleTestimonials = [
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
-}).then(() => console.log('✅ Database connected'));
+}).then(() => console.log(' Database connected'));
 
 // Seed function
 const seedDatabase = async () => {
@@ -84,7 +84,7 @@ const seedDatabase = async () => {
     await Team.deleteMany();
     await Testimonial.deleteMany();
     
-    console.log('📦 Existing data cleared');
+    console.log('Existing data cleared');
 
     // Create admin user
     const admin = await User.create({
@@ -94,24 +94,24 @@ const seedDatabase = async () => {
       role: 'admin',
       isVerified: true
     });
-    console.log('✅ Admin user created');
+    console.log('Admin user created');
 
     // Seed services
     await Service.insertMany(sampleServices);
-    console.log('✅ Services seeded');
+    console.log('Services seeded');
 
     // Seed team
     await Team.insertMany(sampleTeam);
-    console.log('✅ Team seeded');
+    console.log('Team seeded');
 
     // Seed testimonials
     await Testimonial.insertMany(sampleTestimonials);
-    console.log('✅ Testimonials seeded');
+    console.log('Testimonials seeded');
 
-    console.log('🎉 Database seeded successfully!');
+    console.log('Database seeded successfully!');
     process.exit(0);
   } catch (error) {
-    console.error('❌ Error seeding database:', error);
+    console.error('Error seeding database:', error);
     process.exit(1);
   }
 };

@@ -48,10 +48,6 @@ const contactSchema = new mongoose.Schema({
     required: [true, 'Message is required'],
     maxlength: [2000, 'Message cannot be more than 2000 characters']
   },
-  newsletter: {
-    type: Boolean,
-    default: false
-  },
   status: {
     type: String,
     enum: ['new', 'read', 'replied', 'archived'],

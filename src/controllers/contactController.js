@@ -1,5 +1,4 @@
 const Contact = require('../models/Contact');
-const Newsletter = require('../models/Newsletter');
 const AppError = require('../utils/AppError');
 const catchAsync = require('../utils/catchAsync');
 const EmailService = require('../utils/emailService');
@@ -8,7 +7,7 @@ const EmailService = require('../utils/emailService');
 // @route   POST /api/contact
 // @access  Public
 exports.submitContact = catchAsync(async (req, res) => {
-  console.log('📝 Contact form submission received:', {
+  console.log('Contact form submission received:', {
     name: req.body.name,
     email: req.body.email,
     projectType: req.body.projectType
@@ -24,39 +23,18 @@ exports.submitContact = catchAsync(async (req, res) => {
     budget: req.body.budget || '',
     timeline: req.body.timeline || '',
     message: req.body.message,
-    newsletter: req.body.newsletter || false,
     status: 'new',
     ip: req.ip || req.connection.remoteAddress,
     userAgent: req.get('user-agent') || ''
   });
 
-  console.log('✅ Contact saved with ID:', contact._id);
+  console.log(' Contact saved with ID:', contact._id);
 
   // Send email notifications in the background (non-blocking)
   EmailService.sendContactNotification(contact)
     .then(() => EmailService.sendContactAutoReply(contact))
-    .then(() => console.log('✅ Contact emails sent'))
-    .catch((emailError) => console.error('❌ Contact email error:', emailError.message));
-
-  // If user opted for newsletter, add to newsletter list
-  if (req.body.newsletter) {
-    try {
-      await Newsletter.findOneAndUpdate(
-        { email: req.body.email },
-        {
-          email: req.body.email,
-          name: req.body.name,
-          subscribedAt: new Date(),
-          status: 'active'
-        },
-        { upsert: true, new: true }
-      );
-      console.log('✅ Added to newsletter:', req.body.email);
-    } catch (newsletterError) {
-      console.error('Newsletter subscription error:', newsletterError);
-      // Don't fail the main request if newsletter fails
-    }
-  }
+    .then(() => console.log('Contact emails sent'))
+    .catch((emailError) => console.error('Contact email error:', emailError.message));
 
   // Send success response
   res.status(201).json({
